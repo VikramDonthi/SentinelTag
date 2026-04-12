@@ -154,6 +154,30 @@ export const saveGeofencePresets = async (presets) => {
   await set(presetsRef, presets);
 };
 
+// Active Safe Zone Sync
+export const subscribeToActiveSafeZone = (callback) => {
+  if (USE_MOCK_DATA || !db) {
+    const saved = localStorage.getItem('sentinel_active_safe_zone');
+    callback(saved ? JSON.parse(saved) : null);
+    return () => {};
+  }
+
+  const activeZoneRef = ref(db, `SentinelTag/AppData/ActiveSafeZone`);
+  return onValue(activeZoneRef, (snapshot) => {
+    callback(snapshot.val());
+  });
+};
+
+export const saveActiveSafeZone = async (safeZone) => {
+  if (USE_MOCK_DATA || !db) {
+    localStorage.setItem('sentinel_active_safe_zone', JSON.stringify(safeZone));
+    return;
+  }
+
+  const activeZoneRef = ref(db, `SentinelTag/AppData/ActiveSafeZone`);
+  await set(activeZoneRef, safeZone);
+};
+
 // ---------------------------------------------------------------------------
 // 📝  INCIDENT LOGGING
 // ---------------------------------------------------------------------------

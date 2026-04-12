@@ -166,7 +166,7 @@ const SafetyAnalytics = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
         <div className="card">
           <div className="card-header">
             <h3 className="card-title"><ShieldAlert size={18} /> Alert Type Distribution</h3>

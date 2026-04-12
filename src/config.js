@@ -54,11 +54,20 @@ export const DEFAULT_MAP_CENTER = {
 };
 
 // ---------------------------------------------------------------------------
-// 🔐  AUTH — Allowed Users
+// 🤖  GEMINI — AI Safety Agent
 // ---------------------------------------------------------------------------
-// Hardcoded user credentials (temporary — replace with Firebase Auth later).
-// Add/remove entries here to control who can log in.
+// 1. Get an API key from https://aistudio.google.com/
+// 2. Paste your key below
 // ---------------------------------------------------------------------------
+export const GEMINI_API_KEY = ""; // ← PASTE YOUR GEMINI API KEY HERE
+
+export const GEMINI_SYSTEM_PROMPT = `
+You are the SentinelTag Safety Assistant. Your role is to analyze real-time safety data 
+(heart rate, altitude, speed, battery) and provide concise, actionable safety advice.
+You should be calm, professional, and prioritize user safety above all else.
+If you see dangerous trends (extreme heart rate, rapid altitude drop), flag them immediately.
+`;
+
 export const AUTH_USERS = {
   // "username": "password"
   vikramreddy1: "sentinel123", // ← Change or remove this entry
