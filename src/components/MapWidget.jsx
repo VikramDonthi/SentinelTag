@@ -33,11 +33,15 @@ const purpleIcon = new L.Icon({
 });
 
 // Re-centers map imperatively
-function MapController({ mapRef }) {
+function MapController({ mapRef, deviceData, hasCentered, setHasCentered }) {
   const map = useMap();
   useEffect(() => {
     mapRef.current = map;
-  }, [map, mapRef]);
+    if (deviceData?.lat && deviceData?.lng && map && !hasCentered) {
+      map.setView([deviceData.lat, deviceData.lng], 16);
+      setHasCentered(true);
+    }
+  }, [map, mapRef, deviceData, hasCentered, setHasCentered]);
   return null;
 }
 
@@ -53,6 +57,7 @@ function MapClickListener({ setSafeZone, safeZone }) {
 const MapWidget = ({ deviceData, safeZone, setSafeZone, showCenterMarker = true, showDirections = false, caretakerPos }) => {
   const { highlightedIncident, setHighlightedIncident } = useSafety();
   const mapRef = useRef(null);
+  const [hasCentered, setHasCentered] = useState(false);
   const [routeCoords, setRouteCoords] = useState(null);
 
   // ---------------------------------------------------------------------------
@@ -173,7 +178,12 @@ const MapWidget = ({ deviceData, safeZone, setSafeZone, showCenterMarker = true,
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <MapController mapRef={mapRef} />
+        <MapController 
+          mapRef={mapRef} 
+          deviceData={deviceData} 
+          hasCentered={hasCentered} 
+          setHasCentered={setHasCentered} 
+        />
         <MapClickListener setSafeZone={setSafeZone} safeZone={safeZone} />
 
         {/* SentinelTag Device Marker */}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Battery, Wifi, Activity, Navigation, Phone, BellRing, Shield } from 'lucide-react';
 
-const TelemetryPanel = ({ data, isOffline, geofenceBreached }) => {
+const TelemetryPanel = ({ data, isOffline, displayDate, geofenceBreached }) => {
   if (!data) return <div className="card">Loading Health Data...</div>;
 
   const rssiValue = parseInt(data.rssi);
@@ -43,12 +43,15 @@ const TelemetryPanel = ({ data, isOffline, geofenceBreached }) => {
         </div>
 
         {/* Last Updated */}
-        <div style={{ padding: '1rem', backgroundColor: 'var(--bg-color)', borderRadius: 'var(--radius-md)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontSize: '0.875rem' }}>
-            Last Update
+        <div style={{ padding: '1rem', backgroundColor: 'var(--bg-color)', borderRadius: 'var(--radius-md)', border: isOffline ? '1px solid hsla(0, 100%, 50%, 0.2)' : 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isOffline ? 'var(--status-danger)' : 'var(--text-secondary)', marginBottom: '0.25rem', fontSize: '0.875rem' }}>
+            Last Update {isOffline && '(OFFLINE)'}
           </div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: isOffline ? 'var(--status-danger)' : 'var(--text-primary)' }}>
             {data.t}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            {displayDate}
           </div>
         </div>
 

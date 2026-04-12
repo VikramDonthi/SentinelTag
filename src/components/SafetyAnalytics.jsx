@@ -51,19 +51,27 @@ const SafetyAnalytics = () => {
 
     // 3. Battery at Trigger
     const batteryMap = { '0-20%': 0, '21-40%': 0, '41-60%': 0, '61-80%': 0, '81-100%': 0 };
+    let validBatterySum = 0;
+    let validBatteryCount = 0;
+
     allIncidents.forEach(inc => {
       const bat = parseInt(inc.battery);
-      if (bat <= 20) batteryMap['0-20%']++;
-      else if (bat <= 40) batteryMap['21-40%']++;
-      else if (bat <= 60) batteryMap['41-60%']++;
-      else if (bat <= 80) batteryMap['61-80%']++;
-      else batteryMap['81-100%']++;
+      if (!isNaN(bat)) {
+        validBatterySum += bat;
+        validBatteryCount++;
+
+        if (bat <= 20) batteryMap['0-20%']++;
+        else if (bat <= 40) batteryMap['21-40%']++;
+        else if (bat <= 60) batteryMap['41-60%']++;
+        else if (bat <= 80) batteryMap['61-80%']++;
+        else batteryMap['81-100%']++;
+      }
     });
     const batteryData = Object.entries(batteryMap).map(([range, count]) => ({ range, count }));
 
     // KPIs
     const mostCommonType = typeData.reduce((prev, current) => (prev.value > current.value) ? prev : current, { name: 'N/A' }).name;
-    const avgBattery = Math.round(allIncidents.reduce((sum, inc) => sum + parseInt(inc.battery), 0) / allIncidents.length);
+    const avgBattery = validBatteryCount > 0 ? Math.round(validBatterySum / validBatteryCount) : 0;
 
     return {
       allIncidents,

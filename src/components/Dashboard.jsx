@@ -9,6 +9,7 @@ const Dashboard = () => {
   const { 
     deviceData, 
     isOffline, 
+    displayDate,
     safeZone, 
     setSafeZone, 
     geofenceBreached 
@@ -123,6 +124,7 @@ const Dashboard = () => {
         <TelemetryPanel 
           data={deviceData} 
           isOffline={isOffline} 
+          displayDate={displayDate}
           geofenceBreached={geofenceBreached}
         />
         <EmergencyControls data={deviceData} showDirections={showDirections} onToggleDirections={() => setShowDirections(p => !p)} caretakerPos={caretakerPos} />

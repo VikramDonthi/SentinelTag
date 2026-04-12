@@ -6,6 +6,7 @@ import { Shield, Navigation, Bookmark, Save, MapPin } from 'lucide-react';
 const GeofencePage = () => {
   const { 
     deviceData, 
+    isOffline,
     safeZone, 
     setSafeZone, 
     geofenceBreached,
@@ -38,8 +39,8 @@ const GeofencePage = () => {
         <div className="card">
           <div className="card-header">
             <h2 className="card-title"><Shield size={24} className="text-primary" /> Geofence Setting</h2>
-            <span className={`status-badge ${!geofenceEnabled ? 'status-offline' : geofenceBreached ? 'status-danger' : 'status-normal'}`}>
-              {!geofenceEnabled ? 'GEOFENCE DISABLED' : (geofenceBreached ? 'ZONE BREACHED' : 'INSIDE SAFE ZONE')}
+            <span className={`status-badge ${isOffline ? 'status-offline' : !geofenceEnabled ? 'status-offline' : geofenceBreached ? 'status-danger' : 'status-normal'}`}>
+              {isOffline ? 'DEVICE OFFLINE' : !geofenceEnabled ? 'GEOFENCE DISABLED' : (geofenceBreached ? 'ZONE BREACHED' : 'INSIDE SAFE ZONE')}
             </span>
           </div>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>

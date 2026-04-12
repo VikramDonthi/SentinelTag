@@ -143,10 +143,9 @@ export const SafetyProvider = ({ children }) => {
   //
   // Offline detection: if device timestamp is >15 seconds behind wall-clock time,
   //   the device is considered offline. Adjust "15000" (ms) to change timeout.
-  //
-  // Geofence check: uses Haversine distance formula in utils/geofence.js.
-  //   safeZone.radius is in metres. You can change the default in the state above.
   // ---------------------------------------------------------------------------
+  const [displayDate, setDisplayDate] = useState('');
+
   useEffect(() => {
     if (!deviceData?.t) return;
     
@@ -154,10 +153,29 @@ export const SafetyProvider = ({ children }) => {
       const now = new Date();
       const parts = deviceData.t.split(':');
       if (parts.length === 3) {
-        const devTime = new Date();
-        devTime.setHours(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+        let devTime = new Date();
+        
+        // Parse exact date from hardware if available (DD-MM-YYYY)
+        if (deviceData.d) {
+          const dParts = deviceData.d.split('-');
+          if (dParts.length === 3) {
+            devTime.setFullYear(parseInt(dParts[2], 10), parseInt(dParts[1], 10) - 1, parseInt(dParts[0], 10));
+          }
+        }
+        
+        devTime.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10), 0);
+        
         const diffMs = now - devTime;
-        setIsOffline(diffMs > 15000); // ← offline threshold in ms (default 15 sec)
+        setIsOffline(diffMs > 15000); 
+
+        // Update display date directly from hardware
+        if (deviceData.d) {
+          setDisplayDate(deviceData.d);
+        } else {
+          const d = devTime.getDate().toString().padStart(2, '0');
+          const m = (devTime.getMonth() + 1).toString().padStart(2, '0');
+          setDisplayDate(`${d}-${m}-${devTime.getFullYear()}`);
+        }
       }
     };
     
@@ -180,6 +198,7 @@ export const SafetyProvider = ({ children }) => {
   const value = {
     deviceData,
     isOffline,
+    displayDate,
     safeZone,
     setSafeZone,
     geofenceBreached,
