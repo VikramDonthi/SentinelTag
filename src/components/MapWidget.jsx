@@ -227,7 +227,7 @@ const MapWidget = ({ deviceData, safeZone, setSafeZone, showCenterMarker = true,
         )}
 
         {/* Geofence Circle + draggable center */}
-        {safeZone && (
+        {safeZone && safeZone.lat !== null && safeZone.lng !== null && (
           <>
             <Circle
               center={[safeZone.lat, safeZone.lng]}

@@ -42,14 +42,15 @@ export const WEATHER_UNITS = "metric";
 export const DEVICE_ID = "SENTINEL_01"; // ← Change to match your device key
 
 // ---------------------------------------------------------------------------
-// 🗺️  MAP — Default center coordinates
+// 🗺️  MAP — Initial Loading Center
 // ---------------------------------------------------------------------------
-// Fallback lat/lng used when no device GPS data is available yet.
-// Set this to your city or expected device location.
+// This coordinate is ONLY used to load the map tiles during initial boot.
+// Once device data arrives, the map auto-centers on the device location,
+// and the Safe Zone is dynamically created at the device's real coordinates.
 // ---------------------------------------------------------------------------
 export const DEFAULT_MAP_CENTER = {
-  lat: 17.890249, // ← Change to your preferred default latitude
-  lng: 79.599945, // ← Change to your preferred default longitude
+  lat: 17.890249, 
+  lng: 79.599945, 
 };
 
 // ---------------------------------------------------------------------------

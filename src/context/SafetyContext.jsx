@@ -29,10 +29,21 @@ export const SafetyProvider = ({ children }) => {
   // Central config: src/config.js → DEFAULT_MAP_CENTER
   // ---------------------------------------------------------------------------
   const [safeZone, setSafeZone] = useState({ 
-    lat: DEFAULT_MAP_CENTER.lat,
-    lng: DEFAULT_MAP_CENTER.lng,
-    radius: 100   // ← default radius in metres; user can change from Geofencing tab
+    lat: null,
+    lng: null,
+    radius: 100 
   });
+
+  // Effect to initialize safeZone from deviceData once on startup
+  useEffect(() => {
+    if (deviceData?.lat && deviceData?.lng && safeZone.lat === null) {
+      setSafeZone(prev => ({
+        ...prev,
+        lat: parseFloat(deviceData.lat),
+        lng: parseFloat(deviceData.lng)
+      }));
+    }
+  }, [deviceData, safeZone.lat]);
 
   const [geofenceBreached, setGeofenceBreached] = useState(false);
   const [geofencePresets, setGeofencePresets] = useState([]);
@@ -50,13 +61,63 @@ export const SafetyProvider = ({ children }) => {
   // 🔔  NOTIFICATIONS SYSTEM
   // ---------------------------------------------------------------------------
   const [notifications, setNotifications] = useState([]);
+  const lastNoteRef = React.useRef({ message: '', time: 0 }); // Guard for double-alerts
   
+  const [notificationPermission, setNotificationPermission] = useState('default');
+
+  // Request browser notification permissions
+  const requestNotificationPermission = useCallback(async () => {
+    if (!('Notification' in window)) return;
+    const permission = await Notification.permission;
+    if (permission === 'default') {
+      const result = await Notification.requestPermission();
+      setNotificationPermission(result);
+    } else {
+      setNotificationPermission(permission);
+    }
+  }, []);
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
   const addNotification = useCallback((type, title, message, duration = 6000) => {
+    const now = Date.now();
+    
+    // Deduplication guard: ignore identical messages within 3 seconds
+    if (message === lastNoteRef.current.message && (now - lastNoteRef.current.time) < 3000) {
+      return;
+    }
+    lastNoteRef.current = { message, time: now };
+
     const id = Date.now() + Math.random();
     setNotifications(prev => [{ id, type, title, message }, ...prev]);
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id));
     }, duration);
+
+    // Trigger System Push Notification
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        // Use 'tag' to prevent the OS from showing duplicate notifications
+        new Notification(title, { 
+          body: message, 
+          tag: `sentinel-${title.replace(/\s+/g, '-').toLowerCase()}`,
+          renotify: false 
+        });
+      } else if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(title, { 
+              body: message, 
+              tag: `sentinel-${title.replace(/\s+/g, '-').toLowerCase()}` 
+            });
+          }
+        });
+      }
+    }
   }, []);
 
   // Track if we already warned about low battery to avoid spam
@@ -105,7 +166,33 @@ export const SafetyProvider = ({ children }) => {
     } else if (!geofenceBreached) {
       setIsBreachLogged(false); // Reset when device returns inside safe zone
     }
-  }, [geofenceBreached, deviceData, isBreachLogged]);
+  }, [geofenceBreached, deviceData, isBreachLogged, addNotification]);
+
+  // ---------------------------------------------------------------------------
+  // 🚨  HARDWARE STATUS MONITOR
+  // Listens for alerts explicitly pushed by the device (Button, Fall, Scream)
+  // ---------------------------------------------------------------------------
+  const lastStatusRef = React.useRef('NORMAL');
+
+  useEffect(() => {
+    if (!deviceData || !deviceData.status) return;
+
+    const currentStatus = deviceData.status;
+
+    // Trigger when changing to a new abnormal state
+    // We use a Ref here because state is too slow to prevent double-fires
+    // for high-frequency GPS updates.
+    if (currentStatus !== 'NORMAL' && currentStatus !== lastStatusRef.current) {
+      if (['BUTTON_ALERT', 'SCREAM_DETECTED', 'FALL_DETECTED'].includes(currentStatus)) {
+        addNotification('critical', `Emergency: ${currentStatus.replace(/_/g, ' ')}`, `SentinelTag reported an emergency event.`, 15000);
+        recordIncident(DEVICE_ID, { ...deviceData });
+      } else if (currentStatus.includes('VERIFYING')) {
+        addNotification('warning', 'Device Verifying', 'SentinelTag is currently verifying an irregular status.');
+      }
+    }
+    
+    lastStatusRef.current = currentStatus;
+  }, [deviceData, addNotification]);
 
   // ---------------------------------------------------------------------------
   // 💾  GEOFENCE PRESET SYNC (Cloud ↔ Local)
@@ -183,7 +270,7 @@ export const SafetyProvider = ({ children }) => {
     const intervalId = setInterval(checkOffline, 5000); // ← heartbeat check interval (ms)
 
     let isBreached = false;
-    if (geofenceEnabled) {
+    if (geofenceEnabled && safeZone.lat !== null && safeZone.lng !== null) {
       isBreached = checkGeofenceBreach(
         { lat: parseFloat(deviceData.lat), lng: parseFloat(deviceData.lng) },
         { lat: safeZone.lat, lng: safeZone.lng },
@@ -207,7 +294,9 @@ export const SafetyProvider = ({ children }) => {
     highlightedIncident,
     setHighlightedIncident,
     geofenceEnabled,
-    setGeofenceEnabled
+    setGeofenceEnabled,
+    notificationPermission,
+    requestNotificationPermission
   };
 
   return (
@@ -227,27 +316,51 @@ export const SafetyProvider = ({ children }) => {
           const isCritical = n.type === 'critical';
           return (
             <div key={n.id} style={{
-              background: isCritical ? 'hsl(0, 84%, 15%)' : 'hsl(35, 92%, 15%)',
-              border: `1px solid ${isCritical ? 'hsl(0, 84%, 60%)' : 'hsl(45, 100%, 50%)'}`,
-              color: isCritical ? 'hsl(0, 84%, 90%)' : 'hsl(35, 92%, 90%)',
-              padding: '1rem',
-              borderRadius: '8px',
-              minWidth: '300px',
-              maxWidth: '400px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-              borderLeft: `4px solid ${isCritical ? 'hsl(0, 84%, 60%)' : 'hsl(45, 100%, 50%)'}`,
+              background: isCritical 
+                ? 'linear-gradient(135deg, hsla(0, 84%, 12%, 0.85), hsla(0, 84%, 20%, 0.95))' 
+                : 'linear-gradient(135deg, hsla(35, 92%, 12%, 0.85), hsla(35, 92%, 20%, 0.95))',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: `1px solid ${isCritical ? 'hsla(0, 84%, 60%, 0.5)' : 'hsla(45, 100%, 50%, 0.5)'}`,
+              color: '#ffffff',
+              padding: '1.25rem',
+              borderRadius: '12px',
+              minWidth: '320px',
+              maxWidth: '420px',
+              boxShadow: '0 12px 32px rgba(0,0,0,0.3)',
+              borderLeft: `5px solid ${isCritical ? 'hsl(0, 84%, 60%)' : 'hsl(45, 100%, 50%)'}`,
               animation: 'float 0.3s ease-out',
-              pointerEvents: 'auto'
+              pointerEvents: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.4rem'
             }}>
-              <h4 style={{ margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
-                <div style={{
-                  width: '8px', height: '8px', borderRadius: '50%',
-                  background: isCritical ? 'hsl(0, 84%, 60%)' : 'hsl(45, 100%, 50%)',
-                  boxShadow: `0 0 8px ${isCritical ? 'hsl(0, 84%, 60%)' : 'hsl(45, 100%, 50%)'}`
-                }} />
-                {n.title}
-              </h4>
-              <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>{n.message}</p>
+                <h4 style={{ 
+                  margin: 0, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.6rem', 
+                  fontSize: '1rem',
+                  color: '#ffffff',
+                  fontWeight: '700',
+                  letterSpacing: '0.2px'
+                }}>
+                  <div style={{
+                    width: '10px', height: '10px', borderRadius: '50%',
+                    background: isCritical ? 'hsl(0, 84%, 60%)' : 'hsl(45, 100%, 50%)',
+                    boxShadow: `0 0 10px ${isCritical ? 'hsl(0, 84%, 60%)' : 'hsl(45, 100%, 50%)'}`
+                  }} />
+                  {n.title}
+                </h4>
+                <p style={{ 
+                  margin: 0, 
+                  fontSize: '0.875rem', 
+                  color: 'rgba(255, 255, 255, 0.95)', 
+                  lineHeight: '1.4',
+                  fontWeight: '500'
+                }}>
+                  {n.message}
+                </p>
             </div>
           );
         })}
