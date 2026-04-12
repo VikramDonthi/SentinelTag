@@ -1,0 +1,6 @@
+{
+  "appId": "com.sentineltag.app",
+  "appName": "SentinelTag",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

@@ -16,6 +16,7 @@ import './index.css';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   if (!user) {
     return (
@@ -30,10 +31,18 @@ function App() {
       <SafetyProvider>
         <Router>
           <div className="app-container">
-            <Sidebar onLogout={() => setUser(null)} />
+            {/* Pass close handler so menus automatically dismiss on click */}
+            <Sidebar 
+              onLogout={() => setUser(null)} 
+              isMobileOpen={isMobileMenuOpen} 
+              closeMobileMenu={() => setIsMobileMenuOpen(false)} 
+            />
             
             <div className="main-layout">
-                <TopHeader user={user} />
+                <TopHeader 
+                  user={user} 
+                  toggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                />
 
               <main style={{ flex: 1, overflowY: 'auto' }}>
                 <Routes>

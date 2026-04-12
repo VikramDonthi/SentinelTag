@@ -33,7 +33,7 @@ const GeofencePage = () => {
   };
 
   return (
-    <div className="main-content" style={{ gridTemplateColumns: 'minmax(0, 1fr) 420px', gap: '2rem' }}>
+    <div className="main-content">
       {/* Left Column: Interactive Map */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <div className="card">

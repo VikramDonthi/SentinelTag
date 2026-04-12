@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Cloud, Sun, Droplets, Wind } from 'lucide-react';
+import { Cloud, Sun, Droplets, Wind, Menu } from 'lucide-react';
 import { useSafety } from '../context/SafetyContext';
 
 // ---------------------------------------------------------------------------
@@ -39,7 +39,7 @@ async function fetchWeather(lat, lng) {
   };
 }
 
-const TopHeader = ({ user }) => {
+const TopHeader = ({ user, toggleMobileMenu }) => {
   const { deviceData } = useSafety();
 
   const [weather, setWeather] = useState({
@@ -68,16 +68,26 @@ const TopHeader = ({ user }) => {
 
   return (
     <header className="top-header">
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Welcome back,</span>
-        <strong style={{ fontSize: '1.25rem' }}>{user.displayName}</strong>
-        <span style={{ fontSize: '0.78rem', color: 'hsl(199, 89%, 50%)', fontWeight: '600', marginTop: '0.1rem' }}>
-          Device: {deviceData?.id || 'SENTINEL_01'}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {/* Mobile Hamburger Menu */}
+        <button 
+          className="mobile-menu-btn" 
+          onClick={toggleMobileMenu}
+        >
+          <Menu size={24} />
+        </button>
+        
+        <div className="header-greeting" style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Welcome back,</span>
+          <strong style={{ fontSize: '1.25rem' }}>{user.displayName}</strong>
+          <span style={{ fontSize: '0.78rem', color: 'hsl(199, 89%, 50%)', fontWeight: '600', marginTop: '0.1rem' }}>
+            Device: {deviceData?.id || 'SENTINEL_01'}
+          </span>
+        </div>
       </div>
 
       {/* ── Right: Animated Weather Card ───────────────────────────── */}
-      <div>
+      <div className="weather-card-container">
         <div style={{
           position: 'relative',
           display: 'flex',

@@ -78,7 +78,7 @@ const TravelTimeline = () => {
         </div>
       </div>
 
-      <div className="map-container" style={{ height: '400px' }}>
+      <div className="map-container" style={{ height: '600px' }}>
         {loading ? (
           <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
             Loading history...
