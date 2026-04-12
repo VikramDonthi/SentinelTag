@@ -1,10 +1,10 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  Shield, 
-  LayoutDashboard, 
-  History, 
-  BarChart3, 
+import {
+  Shield,
+  LayoutDashboard,
+  History,
+  BarChart3,
   Settings,
   MapPin,
   UserCircle,
@@ -60,6 +60,32 @@ const Sidebar = ({ onLogout }) => {
           <UserCircle size={22} />
           <span>User Profile</span>
         </NavLink>
+
+        {/* Professional Copyright Tag */}
+        <div style={{
+          marginTop: '1.5rem',
+          paddingTop: '1.5rem',
+          borderTop: '1px solid hsla(0,0%,100%,0.1)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.4rem',
+          opacity: 0.7,
+          transition: 'opacity 0.2s ease',
+        }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+        >
+          <span style={{ fontSize: '0.55rem', fontWeight: '500', color: 'hsla(0,0%,100%,0.8)', letterSpacing: '0.5px' }}>
+            Created by
+          </span>
+          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'white', letterSpacing: '0.2px' }}>
+            Vikram Reddy
+          </span>
+          <span style={{ fontSize: '0.55rem', color: 'hsla(0,0%,100%,0.5)', marginTop: '0.2rem' }}>
+            &copy; {new Date().getFullYear()} All Rights Reserved
+          </span>
+        </div>
       </div>
     </aside>
   );
