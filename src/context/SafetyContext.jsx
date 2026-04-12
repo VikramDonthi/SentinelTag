@@ -3,9 +3,13 @@ import {
   subscribeToLiveStatus, 
   subscribeToGeofencePresets, 
   saveGeofencePresets,
+  subscribeToActiveSafeZone,
+  saveActiveSafeZone,
   recordIncident 
 } from '../utils/firebase';
 import { checkGeofenceBreach } from '../utils/geofence';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
 
 // ---------------------------------------------------------------------------
 // ⚙️  DEVICE CONFIGURATION
@@ -34,16 +38,26 @@ export const SafetyProvider = ({ children }) => {
     radius: 100 
   });
 
-  // Effect to initialize safeZone from deviceData once on startup
+  // ---------------------------------------------------------------------------
+  // 💾  GEOFENCE CLOUD SYNC
+  // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (deviceData?.lat && deviceData?.lng && safeZone.lat === null) {
-      setSafeZone(prev => ({
-        ...prev,
-        lat: parseFloat(deviceData.lat),
-        lng: parseFloat(deviceData.lng)
-      }));
-    }
-  }, [deviceData, safeZone.lat]);
+    const unsubscribe = subscribeToActiveSafeZone((data) => {
+      if (data) {
+        setSafeZone(data);
+      } else if (deviceData?.lat && deviceData?.lng) {
+        // Fallback: Default to device location if Firebase is empty
+        const initial = {
+          lat: parseFloat(deviceData.lat),
+          lng: parseFloat(deviceData.lng),
+          radius: 100
+        };
+        setSafeZone(initial);
+        saveActiveSafeZone(initial);
+      }
+    });
+    return () => unsubscribe();
+  }, [deviceData?.lat, deviceData?.lng]); // Re-run if first-time init is needed when data arrives
 
   const [geofenceBreached, setGeofenceBreached] = useState(false);
   const [geofencePresets, setGeofencePresets] = useState([]);
@@ -65,23 +79,44 @@ export const SafetyProvider = ({ children }) => {
   
   const [notificationPermission, setNotificationPermission] = useState('default');
 
-  // Request browser notification permissions
+  // Professional Alert Sound URLs
+  const CRITICAL_SOUND = 'https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3'; // Emergency Siren
+  const WARNING_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3';
+
+  // Request browser and native notification permissions
   const requestNotificationPermission = useCallback(async () => {
-    if (!('Notification' in window)) return;
-    const permission = await Notification.permission;
-    if (permission === 'default') {
+    // 1. Browser Native
+    if ('Notification' in window) {
       const result = await Notification.requestPermission();
       setNotificationPermission(result);
-    } else {
-      setNotificationPermission(permission);
+    }
+    
+    // 2. Capacitor (Android)
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const status = await LocalNotifications.requestPermissions();
+        console.log('Native notification permission:', status.display);
+
+        // CREATE CHANNEL (Required for Android 8.0+)
+        await LocalNotifications.createChannel({
+          id: 'sentinel-alerts',
+          name: 'Sentinel Alerts',
+          description: 'Critical safety and emergency alerts',
+          importance: 5, // Importance.High
+          visibility: 1, // Visibility.Public
+          vibration: true,
+          sound: 'alert.wav' // Fallback
+        });
+        console.log('Sentinel notification channel initialized.');
+      } catch (err) {
+        console.error('Failed to init native notifications:', err);
+      }
     }
   }, []);
 
   useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationPermission(Notification.permission);
-    }
-  }, []);
+    requestNotificationPermission();
+  }, [requestNotificationPermission]);
 
   const addNotification = useCallback((type, title, message, duration = 6000) => {
     const now = Date.now();
@@ -98,23 +133,51 @@ export const SafetyProvider = ({ children }) => {
       setNotifications(prev => prev.filter(n => n.id !== id));
     }, duration);
 
-    // Trigger System Push Notification
-    if ('Notification' in window) {
+    const idString = `sentinel-${title.replace(/\s+/g, '-').toLowerCase()}`;
+
+    // ── 🔊 PLAY SOUND ─────────────────────────────────────────────
+    try {
+      const audio = new Audio(type === 'critical' ? CRITICAL_SOUND : WARNING_SOUND);
+      audio.volume = type === 'critical' ? 1.0 : 0.6;
+      
+      if (type === 'critical') {
+        audio.loop = true;
+        audio.play().catch(e => console.warn('Audio play failed:', e));
+        
+        // Stop the looping alarm when the notification duration ends
+        setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }, duration);
+      } else {
+        audio.play().catch(e => console.warn('Audio play failed:', e));
+      }
+    } catch (e) {
+      console.warn('Audio initialization failed');
+    }
+
+    // ── 📱 NATIVE ANDROID NOTIFICATION ──────────────────────────
+    if (Capacitor.isNativePlatform()) {
+      LocalNotifications.schedule({
+        notifications: [{
+          title: title,
+          body: message,
+          id: Math.floor(Math.random() * 100000),
+          sound: type === 'critical' ? 'alert.wav' : 'vibrate.wav', // Fallback to system if not found
+          smallIcon: 'ic_stat_name', // Standard capacitor icon
+          channelId: 'sentinel-alerts',
+          attachments: []
+        }]
+      });
+    }
+
+    // ── 🌐 WEB BROWSER NOTIFICATION ─────────────────────────────
+    if (!Capacitor.isNativePlatform() && 'Notification' in window) {
       if (Notification.permission === 'granted') {
-        // Use 'tag' to prevent the OS from showing duplicate notifications
         new Notification(title, { 
           body: message, 
-          tag: `sentinel-${title.replace(/\s+/g, '-').toLowerCase()}`,
-          renotify: false 
-        });
-      } else if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            new Notification(title, { 
-              body: message, 
-              tag: `sentinel-${title.replace(/\s+/g, '-').toLowerCase()}` 
-            });
-          }
+          tag: idString,
+          renotify: true 
         });
       }
     }
@@ -270,7 +333,8 @@ export const SafetyProvider = ({ children }) => {
     const intervalId = setInterval(checkOffline, 5000); // ← heartbeat check interval (ms)
 
     let isBreached = false;
-    if (geofenceEnabled && safeZone.lat !== null && safeZone.lng !== null) {
+    // ONLY check geofence if device is ONLINE and enabled
+    if (geofenceEnabled && !isOffline && safeZone.lat !== null && safeZone.lng !== null) {
       isBreached = checkGeofenceBreach(
         { lat: parseFloat(deviceData.lat), lng: parseFloat(deviceData.lng) },
         { lat: safeZone.lat, lng: safeZone.lng },
@@ -287,7 +351,12 @@ export const SafetyProvider = ({ children }) => {
     isOffline,
     displayDate,
     safeZone,
-    setSafeZone,
+    setSafeZone: (newZone) => {
+      // Logic for functional updates or direct objects
+      const updatedZone = typeof newZone === 'function' ? newZone(safeZone) : newZone;
+      setSafeZone(updatedZone);
+      saveActiveSafeZone(updatedZone);
+    },
     geofenceBreached,
     geofencePresets,
     updatePreset,
