@@ -49,8 +49,8 @@ export const DEVICE_ID = "SENTINEL_01"; // ← Change to match your device key
 // and the Safe Zone is dynamically created at the device's real coordinates.
 // ---------------------------------------------------------------------------
 export const DEFAULT_MAP_CENTER = {
-  lat: 17.890249, 
-  lng: 79.599945, 
+  lat: 17.890249,
+  lng: 79.599945,
 };
 
 // ---------------------------------------------------------------------------
@@ -73,4 +73,4 @@ export const AUTH_USERS = {
   vikramreddy1: "sentinel123", // ← Change or remove this entry
   admin: "admin123",    // ← Change or remove this entry
 };
-//end 
+//end npx vercel --prod to update and deploy

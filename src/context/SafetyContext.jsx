@@ -24,7 +24,7 @@ const SafetyContext = createContext();
 
 export const SafetyProvider = ({ children }) => {
   const [deviceData, setDeviceData] = useState(null);
-  const [isOffline, setIsOffline] = useState(false);
+  const [isOffline, setIsOffline] = useState(true); // Default to true to prevent initial phantom alerts
 
   // ---------------------------------------------------------------------------
   // 📍  DEFAULT SAFE ZONE
