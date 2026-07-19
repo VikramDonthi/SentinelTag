@@ -184,7 +184,7 @@ If you need to draw UML models (e.g., in Draw.io, StarUML, or PlantUML), use the
 ---
 ***Images***
 <img width="1920" height="1200" alt="main" src="https://github.com/user-attachments/assets/a8619783-8ee0-4f9c-9ab0-709ff13398d5" />
-<img width="591" height="1280" alt="screenshot10" src="https://github.com/user-attachments/assets/874711dc-dbb9-4be2-881e-aa546613be8c" />
+<img width="210" height="460" alt="screenshot10" src="https://github.com/user-attachments/assets/874711dc-dbb9-4be2-881e-aa546613be8c" /> <br>
 <img width="292" height="201" alt="screenshot9" src="https://github.com/user-attachments/assets/1b0c8206-264c-452e-b0a4-2f41972be33e" />
 <img width="380" height="251" alt="screenshot8" src="https://github.com/user-attachments/assets/bb6b0d50-9d91-42b5-9db6-c8c85c7803a1" />
 <img width="1914" height="1088" alt="screenshot7" src="https://github.com/user-attachments/assets/b4c78335-35c6-4a64-b9d8-ac21d7d5c6be" />
