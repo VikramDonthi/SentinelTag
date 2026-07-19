@@ -182,6 +182,19 @@ If you need to draw UML models (e.g., in Draw.io, StarUML, or PlantUML), use the
 - **Cost Effective Architecture**: Runs entirely within free-tier limits of Firebase and Vercel for standard consumer load.
 
 ---
+***Images***
+<img width="1920" height="1200" alt="main" src="https://github.com/user-attachments/assets/a8619783-8ee0-4f9c-9ab0-709ff13398d5" />
+<img width="591" height="1280" alt="screenshot10" src="https://github.com/user-attachments/assets/874711dc-dbb9-4be2-881e-aa546613be8c" />
+<img width="292" height="201" alt="screenshot9" src="https://github.com/user-attachments/assets/1b0c8206-264c-452e-b0a4-2f41972be33e" />
+<img width="380" height="251" alt="screenshot8" src="https://github.com/user-attachments/assets/bb6b0d50-9d91-42b5-9db6-c8c85c7803a1" />
+<img width="1914" height="1088" alt="screenshot7" src="https://github.com/user-attachments/assets/b4c78335-35c6-4a64-b9d8-ac21d7d5c6be" />
+<img width="1906" height="1138" alt="screenshot6" src="https://github.com/user-attachments/assets/6d5aa1ce-f999-4c8f-89c9-097e95cde342" />
+<img width="1920" height="1140" alt="screenshot5" src="https://github.com/user-attachments/assets/99469709-9680-425b-914a-879b2f173a70" />
+<img width="1867" height="1080" alt="screenshot4" src="https://github.com/user-attachments/assets/3c07185f-012b-4187-958b-19fe562bb080" />
+<img width="1920" height="1140" alt="screenshot3" src="https://github.com/user-attachments/assets/dc07d79f-db67-48eb-8c35-27a1fc6440f4" />
+<img width="1920" height="1140" alt="screenshot2" src="https://github.com/user-attachments/assets/49f8ed50-90e3-4886-a490-d921fdac85ff" />
+<img width="1193" height="722" alt="screenshot1" src="https://github.com/user-attachments/assets/d0409b52-8afc-4c15-a49e-fcfe40eaadd2" />
+
 
 ## 13. Future Scope
 - **Offline Map Mementos**: Automatically cache map tiles directly to the Android phone storage using Capacitor Filesystem so the app maps work without an internet connection.
